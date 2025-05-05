@@ -6,7 +6,6 @@ import json
 import re 
 
 
-
 URL = "https://quotes.toscrape.com"
 FIRST_PAGE = "/"
 INDEX_FILE = "inverted_index.json"  # index file to store the inverted index
@@ -66,8 +65,6 @@ def build_index():
         json.dump(index, f, indent=2)  # save the index to a JSON file
     print(f"Index saved to {INDEX_FILE}")
 
-   
-'''
 def load_index(filename="inverted_index.json"):
     with open(filename, 'r') as readfile:  # open file in read mode
         index = json.load(readfile)    # load index from JSON file into a dictionary
@@ -80,8 +77,20 @@ def print_inverted_index(index, word):
             print(f"Word: '{word}'\nURL: {url}\nFrequency: {count}")
     else:
         print(f"Word '{word}' not found in the index.")
-'''
+
+
+def command_loop():
+    index = load_index()  # load the index from the file
+    while True:
+        word = input("Enter a word to search (or 'exit' to quit): ").strip().lower()
+        if word == 'exit':
+            break
+        elif word.startswith("print "):
+            _, word = word.split(maxsplit=1)  # split the command and the word
+            print_inverted_index(index, word)
+        else:
+            print("Unknown command. Use 'print <word>' to see the index for a word or 'exit' to quit.")
+
    
 if __name__ == "__main__":
-    build_index()  # run the index building function
-    print("Indexing complete.")
+    command_loop()  # start the command loop

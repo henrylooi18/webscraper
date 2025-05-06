@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
+from collections import defaultdict
 import time
 import json
 import re 
@@ -74,20 +75,78 @@ def load_index(filename="inverted_index.json"):
 def print_inverted_index(index, word):
     if word in index:
         for url, count in index[word].items():
-            print(f"Word: '{word}'\nURL: {url}\nFrequency: {count}")
+            print(f"Word: '{word}', URL: {url}, Frequency: {count}")
     else:
         print(f"Word '{word}' not found in the index.")
 
 
+def find_words(index, words):
+    words_tokens = parse_tokenize(words)  # tokenize the input words
+    total_urls = defaultdict(lambda: {"match_type": 0, "frequency": 0, "words_found": {}}) # match type: 2=exact, 1=all, 0=partial 
+
+    # collect number of apperances of each word in the URLs
+    word_url = []
+    for word in words_tokens:
+        if word in index:
+            word_url.append(set(index[word].keys()))  # get the URLs for the word
+        else:
+            word_url.append(set())  # if the word is not in the index, add an empty set
+
+    all_match = set.intersection(*word_url) if word_url else set()  # find the intersection of all sets (exact match)
+    partial_match = set.union(*word_url) if word_url else set()  # partial match URLs
+  
+    for url in partial_match:
+        total_frequency = 0
+        words_found = {}
+
+        for word in words_tokens:
+            frequency = index.get(word, {}).get(url, 0)  # get the frequency of the word in the URL
+            if frequency > 0: 
+                words_found[word] = frequency  # add the word and its frequency to the dictionary
+                total_frequency += frequency  # sum the frequencies
+
+        match_type = 0  # default match type is 0 (partial match)
+
+        try:
+            response = requests.get(url)  # check if the URL is reachable
+            page_text = response.text.lower()
+            if words.lower() in page_text:  # check if the word is in the page text
+                match_type = 2
+            elif url in all_match:
+                match_type = 1    
+        except:
+            continue     
+
+        total_urls[url]["match_type"] = match_type  # set the match type for the URL
+        total_urls[url]["frequency"] = total_frequency  # set the frequency for the URL
+        total_urls[url]["words_found"] = words_found  # update the words found for the URL
+
+    ranking = sorted(total_urls.items(), key=lambda x: (-x[1]["match_type"], -x[1]["frequency"]))  # sort the URLs by match type and frequency
+    return ranking
+    
+
 def command_loop():
     index = load_index()  # load the index from the file
     while True:
-        word = input("Enter a word to search (or 'exit' to quit): ").strip().lower()
+        word = input("Enter a word to search ('print <word>' 'find <word' or 'exit' to quit): ").strip().lower()
         if word == 'exit':
             break
         elif word.startswith("print "):
             _, word = word.split(maxsplit=1)  # split the command and the word
             print_inverted_index(index, word)
+        elif word.startswith("find "):
+            _, words = word.split(maxsplit=1)  # split the command and the words
+            results = find_words(index, words)
+            if results:
+                for url, data in results:
+                    print(f"\nURL: {url}")
+                    print(f"Match Type: {data['match_type']} (2=Exact, 1=All, 0=Partial)")
+                    print(f"Total Frequency: {data['frequency']}")
+                    print("Words Found:")
+                    for word, freq in data["words_found"].items():
+                        print(f"'{word}': {freq}")
+            else: 
+                print("No results found.")
         else:
             print("Unknown command. Use 'print <word>' to see the index for a word or 'exit' to quit.")
 

@@ -158,5 +158,4 @@ def command_loop():
 
    
 if __name__ == "__main__":
-    build_index()  # build the index
     command_loop()  # start the command loop

@@ -27,6 +27,7 @@ def extract_next_page(soup, url):
     return links
 
 
+# ===== build index function =====
 def build_index():
     index = {}
     next_visit = {URL + '/'}
@@ -66,12 +67,15 @@ def build_index():
         json.dump(index, f, indent=2)  # save the index to a JSON file
     print(f"Index saved to {INDEX_FILE}")
 
+
+# ===== load index function =====
 def load_index(filename="inverted_index.json"):
     with open(filename, 'r') as readfile:  # open file in read mode
         index = json.load(readfile)    # load index from JSON file into a dictionary
     return index  
 
 
+# ===== print inverted index function =====
 def print_inverted_index(index, word):
     if word in index:
         for url, count in index[word].items():
@@ -80,6 +84,7 @@ def print_inverted_index(index, word):
         print(f"Word '{word}' not found in the index.")
 
 
+# ===== find words function =====
 def find_words(index, words):
     words_tokens = parse_tokenize(words)  # tokenize the input words
     total_urls = defaultdict(lambda: {"match_type": 0, "frequency": 0, "words_found": {}}) # match type: 2=exact, 1=all, 0=partial 

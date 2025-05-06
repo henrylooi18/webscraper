@@ -75,7 +75,7 @@ def load_index(filename="inverted_index.json"):
 def print_inverted_index(index, word):
     if word in index:
         for url, count in index[word].items():
-            print(f"Word: '{word}', URL: {url}, Frequency: {count}")
+            print(f"\nWord: '{word}'\nURL: {url}\nFrequency: {count}")
     else:
         print(f"Word '{word}' not found in the index.")
 
@@ -128,7 +128,8 @@ def find_words(index, words):
 def command_loop():
     index = load_index()  # load the index from the file
     while True:
-        word = input("Enter a word to search ('print <word>' 'find <word' or 'exit' to quit): ").strip().lower()
+        print("\nCommands: 'print <words>' || 'find <word>' || 'exit'")
+        word = input("Enter command: ").strip().lower()
         if word == 'exit':
             break
         elif word.startswith("print "):
@@ -148,8 +149,9 @@ def command_loop():
             else: 
                 print("No results found.")
         else:
-            print("Unknown command. Use 'print <word>' to see the index for a word or 'exit' to quit.")
+            print("Unknown command. Use 'print <words>' to see the page ranking of the words  || 'find <word>' to see the index for a word || 'exit' to quit.")
 
    
 if __name__ == "__main__":
+    build_index()  # build the index
     command_loop()  # start the command loop
